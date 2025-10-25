@@ -1,8 +1,6 @@
 package ru.aftaa.p.mainactivity.viewmodel
 
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.State
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
@@ -11,99 +9,106 @@ import ru.aftaa.p.mainactivity.data.model.Photo
 import ru.aftaa.p.mainactivity.network.RetrofitClient
 
 class GalleryViewModel : ViewModel() {
+    // Используем mutableStateOf напрямую без State интерфейса
+    val currentAlbums = mutableStateOf<List<Album>>(emptyList())
+    val currentPhotos = mutableStateOf<List<Photo>>(emptyList())
+    val isLoading = mutableStateOf(false)
+    val error = mutableStateOf<String?>(null)
+    val currentAlbumTitle = mutableStateOf("Альбомы")
+    val canGoBack = mutableStateOf(false)
+
+    private val navigationStack = mutableListOf<Album>()
     private val _albumsTree = mutableStateOf<List<Album>>(emptyList())
-    private val _currentAlbums = mutableStateOf<List<Album>>(emptyList())
-    private val _currentPhotos = mutableStateOf<List<Photo>>(emptyList())
-    private val _isLoading = mutableStateOf(false)
-    private val _error = mutableStateOf<String?>(null)
-
-    private val navigationStack = mutableStateListOf<Album>()
-    private val _currentAlbumTitle = mutableStateOf("Альбомы")
-
-    // Public states
-    val currentAlbums: State<List<Album>> = _currentAlbums
-    val currentPhotos: State<List<Photo>> = _currentPhotos
-    val isLoading: State<Boolean> = _isLoading
-    val error: State<String?> = _error
-    val currentAlbumTitle: State<String> = _currentAlbumTitle
-
-    val canGoBack: State<Boolean> = mutableStateOf(navigationStack.isNotEmpty())
 
     init {
         loadAlbumsTree()
+        updateCanGoBack()
     }
 
     private fun loadAlbumsTree() {
-        _isLoading.value = true
+        isLoading.value = true
         viewModelScope.launch {
             try {
                 val response = RetrofitClient.instance.getAlbumsTree()
                 if (response.success) {
                     _albumsTree.value = response.data
-                    _currentAlbums.value = response.data
-                    _error.value = null
+                    currentAlbums.value = response.data
+                    error.value = null
                 } else {
-                    _error.value = "Ошибка загрузки альбомов"
+                    error.value = "Ошибка загрузки альбомов"
                 }
             } catch (e: Exception) {
-                _error.value = "Ошибка сети: ${e.message}"
+                error.value = "Ошибка сети: ${e.message}"
             } finally {
-                _isLoading.value = false
+                isLoading.value = false
             }
         }
     }
 
     fun navigateToAlbum(album: Album) {
         if (album.childAlbums.isNotEmpty()) {
-            // Переход к вложенным альбомам
             navigationStack.add(album)
-            _currentAlbums.value = album.childAlbums
-            _currentPhotos.value = emptyList()
-            _currentAlbumTitle.value = album.title
-        } else if (album.hasPhotos) {
-            // Загрузка фото конечного альбома
+            currentAlbums.value = album.childAlbums
+            currentPhotos.value = emptyList()
+            currentAlbumTitle.value = album.title
+        } else {
             loadAlbumPhotos(album)
         }
+        updateCanGoBack()
     }
 
     private fun loadAlbumPhotos(album: Album) {
-        _isLoading.value = true
+        isLoading.value = true
         viewModelScope.launch {
             try {
                 val response = RetrofitClient.instance.getAlbumPhotos(album.id)
                 if (response.success) {
-                    _currentPhotos.value = response.data
-                    _currentAlbums.value = emptyList()
+                    currentPhotos.value = response.data
+                    currentAlbums.value = emptyList()
                     navigationStack.add(album)
-                    _currentAlbumTitle.value = album.title
-                    _error.value = null
+                    currentAlbumTitle.value = album.title
+                    error.value = null
                 } else {
-                    _error.value = "Ошибка загрузки фото"
+                    error.value = "Ошибка загрузки фото"
                 }
             } catch (e: Exception) {
-                _error.value = "Ошибка сети: ${e.message}"
+                error.value = "Ошибка сети: ${e.message}"
             } finally {
-                _isLoading.value = false
+                isLoading.value = false
             }
         }
     }
 
     fun goBack() {
-        _currentPhotos.value = emptyList()
+        println("DEBUG: goBack called, stack size: ${navigationStack.size}")
+
         if (navigationStack.isNotEmpty()) {
             navigationStack.removeLast()
-            val parentAlbum = navigationStack.lastOrNull()
-            _currentAlbums.value = parentAlbum?.childAlbums ?: _albumsTree.value
-            _currentAlbumTitle.value = parentAlbum?.title ?: "Альбомы"
+            currentPhotos.value = emptyList()
+
+            if (navigationStack.isNotEmpty()) {
+                val parentAlbum = navigationStack.last()
+                currentAlbums.value = parentAlbum.childAlbums
+                currentAlbumTitle.value = parentAlbum.title
+            } else {
+                currentAlbums.value = _albumsTree.value
+                currentAlbumTitle.value = "Альбомы"
+            }
+        } else {
+            println("DEBUG: Already at root, doing nothing")
+            // Остаемся на главной, приложение не закрывается
         }
+        updateCanGoBack()
+    }
+
+    private fun updateCanGoBack() {
+        canGoBack.value = navigationStack.isNotEmpty()
     }
 
     fun retry() {
-        if (_currentPhotos.value.isNotEmpty()) {
-            // Перезагружаем фото
+        if (currentPhotos.value.isNotEmpty()) {
             navigationStack.lastOrNull()?.let { loadAlbumPhotos(it) }
         } else {
-            // Перезагружаем дерево альбомов
             loadAlbumsTree()
         }
     }

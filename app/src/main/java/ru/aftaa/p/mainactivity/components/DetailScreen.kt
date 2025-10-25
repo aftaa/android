@@ -29,22 +29,34 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import ru.aftaa.p.mainactivity.data.model.Photo
+import androidx.activity.compose.BackHandler
+import androidx.compose.runtime.mutableStateOf
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class) // ИСПОЛЬЗУЙТЕ ExperimentalFoundationApi
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun DetailScreen(
     initialImageIndex: Int,
     photos: List<Photo>,
     onBackClick: () -> Unit
 ) {
+    BackHandler {
+        onBackClick()
+    }
+
     var currentPage by remember { mutableIntStateOf(initialImageIndex) }
     val pagerState = rememberPagerState(
         initialPage = initialImageIndex,
         pageCount = { photos.size }
     )
 
+    // Отслеживаем, увеличено ли текущее изображение
+    var isCurrentImageZoomed by remember { mutableStateOf(value = false) }
+
     LaunchedEffect(pagerState.currentPage) {
         currentPage = pagerState.currentPage
+        // При смене фото сбрасываем флаг зума
+        isCurrentImageZoomed = false
     }
 
     Scaffold(
@@ -79,44 +91,12 @@ fun DetailScreen(
             ) { page ->
                 ZoomableImage(
                     imageUrl = photos[page].fullImageUrl,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
+                    onZoomStateChange = { isZoomed ->
+                        isCurrentImageZoomed = isZoomed
+                    }
                 )
             }
-
-            if (photos.size > 1) {
-                PageIndicator(
-                    pageCount = photos.size,
-                    currentPage = currentPage,
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(bottom = 16.dp)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun PageIndicator(
-    pageCount: Int,
-    currentPage: Int,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier
-    ) {
-        repeat(pageCount) { page ->
-            Box(
-                modifier = Modifier
-                    .size(8.dp)
-                    .padding(2.dp)
-                    .background(
-                        color = if (page == currentPage) Color.White else Color.White.copy(alpha = 0.5f),
-                        shape = CircleShape
-                    )
-            )
         }
     }
 }

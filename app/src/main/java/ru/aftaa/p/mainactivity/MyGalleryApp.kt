@@ -8,27 +8,31 @@ import ru.aftaa.p.mainactivity.data.model.Photo
 import ru.aftaa.p.mainactivity.navigation.AppNavigation
 import ru.aftaa.p.mainactivity.navigation.Screen
 import ru.aftaa.p.mainactivity.screens.GalleryScreen
+import ru.aftaa.p.mainactivity.viewmodel.GalleryViewModel
 
 @Composable
 fun MyGalleryApp() {
     val navigation = viewModel<AppNavigation>()
-    val currentScreen = navigation.currentScreen // УБРАТЬ "by"
+    val currentScreen = navigation.currentScreen.value
 
     when (currentScreen) {
         is Screen.Gallery -> {
+            val galleryViewModel: GalleryViewModel = viewModel()
+
             GalleryScreen(
-                onPhotoClick = { clickedPhoto, allPhotos ->
+                viewModel = galleryViewModel,
+                onImageClick = { clickedPhoto ->
+                    val allPhotos = galleryViewModel.currentPhotos.value
                     val index = allPhotos.indexOfFirst { it.id == clickedPhoto.id }
                     navigation.navigateTo(Screen.Detail(index, allPhotos))
                 }
             )
         }
         is Screen.Detail -> {
-            val detailScreen = currentScreen as Screen.Detail
             DetailScreen(
-                initialImageIndex = detailScreen.initialImageIndex,
-                photos = detailScreen.photos,
-                onBackClick = { navigation.back() }
+                initialImageIndex = currentScreen.initialImageIndex,
+                photos = currentScreen.photos,
+                onBackClick = { navigation.back() } // Это вернет к GalleryScreen
             )
         }
     }

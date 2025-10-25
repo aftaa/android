@@ -2,8 +2,10 @@ package ru.aftaa.p.mainactivity.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -42,7 +44,7 @@ fun PhotoGrid(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    androidx.compose.foundation.layout.Column(
+                    Column(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text("Ошибка: $error")
@@ -62,18 +64,19 @@ fun PhotoGrid(
             }
             else -> {
                 LazyVerticalGrid(
-                    columns = GridCells.Adaptive(minSize = 150.dp),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(8.dp)
+                    columns = GridCells.Fixed(3),
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(4.dp)
                 ) {
                     items(photos) { photo ->
                         AsyncImage(
                             model = photo.thumbnailUrl,
                             contentDescription = photo.title,
                             modifier = Modifier
-                                .aspectRatio(1f)
+                                .height(120.dp)
                                 .padding(4.dp)
                                 .clickable { onImageClick(photo) },
-                            contentScale = ContentScale.Crop
+                            contentScale = ContentScale.Fit // НЕ масштабировать
                         )
                     }
                 }

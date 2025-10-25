@@ -15,11 +15,16 @@ import ru.aftaa.p.mainactivity.components.AlbumGrid
 import ru.aftaa.p.mainactivity.components.PhotoGrid
 import ru.aftaa.p.mainactivity.data.model.Photo
 import ru.aftaa.p.mainactivity.viewmodel.GalleryViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.activity.compose.BackHandler
 
+
+
+// В GalleryScreen.kt
 @Composable
 fun GalleryScreen(
     viewModel: GalleryViewModel = viewModel(),
-    onPhotoClick: (Photo, List<Photo>) -> Unit
+    onImageClick: (Photo) -> Unit
 ) {
     val currentAlbums = viewModel.currentAlbums.value
     val currentPhotos = viewModel.currentPhotos.value
@@ -27,7 +32,11 @@ fun GalleryScreen(
     val error = viewModel.error.value
     val currentAlbumTitle = viewModel.currentAlbumTitle.value
     val canGoBack = viewModel.canGoBack.value
-    // УБРАТЬ эту строку: val currentScreen = viewModel.currentScreen.value
+
+    // Перехватываем системную кнопку "Назад"
+    BackHandler(enabled = canGoBack) {
+        viewModel.goBack()
+    }
 
     Scaffold(
         topBar = {
@@ -43,58 +52,22 @@ fun GalleryScreen(
             )
         }
     ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            when {
-                isLoading -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text("Загрузка...")
+        Box(modifier = Modifier.padding(paddingValues)) {
+            if (currentPhotos.isNotEmpty()) {
+                PhotoGrid(
+                    photos = currentPhotos,
+                    isLoading = isLoading,
+                    error = error,
+                    onRetry = { viewModel.retry() },
+                    onImageClick = onImageClick
+                )
+            } else {
+                AlbumGrid(
+                    albums = currentAlbums,
+                    onAlbumClick = { album ->
+                        viewModel.navigateToAlbum(album)
                     }
-                }
-                error != null -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("Ошибка: $error")
-                            Button(onClick = { viewModel.retry() }) {
-                                Text("Повторить")
-                            }
-                        }
-                    }
-                }
-                currentPhotos.isNotEmpty() -> {
-                    PhotoGrid(
-                        photos = currentPhotos,
-                        isLoading = isLoading,
-                        error = error,
-                        onRetry = { viewModel.retry() },
-                        onImageClick = { photo ->
-                            onPhotoClick(photo, currentPhotos)
-                        }
-                    )
-                }
-                currentAlbums.isNotEmpty() -> {
-                    AlbumGrid(
-                        albums = currentAlbums,
-                        onAlbumClick = { viewModel.navigateToAlbum(it) }
-                    )
-                }
-                else -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text("Нет данных")
-                    }
-                }
+                )
             }
         }
     }

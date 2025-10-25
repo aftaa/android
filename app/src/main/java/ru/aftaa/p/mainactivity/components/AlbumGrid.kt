@@ -2,19 +2,18 @@ package ru.aftaa.p.mainactivity.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
-import androidx.compose.material.Icon
 import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -26,11 +25,17 @@ fun AlbumGrid(
     onAlbumClick: (Album) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    LazyColumn(
+    println("DEBUG: AlbumGrid rendering ${albums.size} albums")
+
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(3), // Фиксированные 3 колонки
         modifier = modifier,
-        contentPadding = PaddingValues(8.dp)
+        contentPadding = PaddingValues(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         items(albums) { album ->
+            println("DEBUG: Rendering album: ${album.title}")
             AlbumItem(
                 album = album,
                 onAlbumClick = onAlbumClick
@@ -47,49 +52,41 @@ fun AlbumItem(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp)
+            .height(140.dp)
             .clickable { onAlbumClick(album) },
-        elevation = 4.dp
+        elevation = 0.dp, // Без тени
+        backgroundColor = androidx.compose.ui.graphics.Color.Transparent, // Прозрачный фон
+        shape = RoundedCornerShape(0.dp) // Без скруглений
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
             // Превью альбома
             AsyncImage(
                 model = album.coverPhotoUrl ?: "https://picsum.photos/100/100",
                 contentDescription = album.title,
                 modifier = Modifier
-                    .size(60.dp)
+                    .height(100.dp)
+                    .fillMaxWidth()
                     .clip(RoundedCornerShape(8.dp)),
-                contentScale = ContentScale.Crop
+                contentScale = ContentScale.Fit
             )
 
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(start = 16.dp)
-            ) {
-                Text(
-                    text = album.title,
-                    style = androidx.compose.material.MaterialTheme.typography.h6,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Text(
-                    text = "${album.photoCount} фото",
-                    style = androidx.compose.material.MaterialTheme.typography.body2,
-                    color = androidx.compose.material.MaterialTheme.colors.onSurface.copy(alpha = 0.7f)
-                )
-            }
+            Spacer(modifier = Modifier.height(4.dp))
 
-            // Стрелка для вложенных альбомов
-            if (album.childAlbums.isNotEmpty()) {
-                Icon(
-                    imageVector = Icons.Default.KeyboardArrowRight,
-                    contentDescription = "Вложенные альбомы"
-                )
-            }
+            // Название альбома по центру
+            Text(
+                text = album.title,
+                style = androidx.compose.material.MaterialTheme.typography.subtitle1,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center
+            )
         }
     }
 }
