@@ -1,5 +1,7 @@
 package ru.aftaa.p.mainactivity.components
 
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,8 +11,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onGloballyPositioned
 import coil.compose.AsyncImage
-import androidx.compose.foundation.gestures.detectTransformGestures
 
 @Composable
 fun ZoomableImage(
@@ -20,6 +22,7 @@ fun ZoomableImage(
 ) {
     var scale by remember { mutableFloatStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
+    var imageSize by remember { mutableStateOf<androidx.compose.ui.geometry.Size?>(null) }
 
     LaunchedEffect(scale) {
         onZoomStateChange(scale > 1f)
@@ -27,23 +30,43 @@ fun ZoomableImage(
 
     Box(
         modifier = modifier
-            .pointerInput(Unit) {
-                detectTransformGestures { centroid, pan, zoom, rotation ->
-                    // Два пальца - масштабирование
-                    scale = (scale * zoom).coerceIn(0.5f, 5f)
+            .pointerInput(scale) {
+                if (scale > 1f) {
+                    detectTransformGestures { centroid, pan, zoom, rotation ->
+                        // УСИЛЕННОЕ масштабирование
+                        val boostedZoom = when {
+                            zoom > 1f -> 1f + (zoom - 1f) * 3f  // Усиливаем увеличение
+                            zoom < 1f -> 1f - (1f - zoom) * 2f  // Усиливаем уменьшение
+                            else -> zoom
+                        }
 
-                    // Панорамирование только когда увеличены
-                    if (scale > 1f) {
-                        offset += pan
+                        scale = (scale * boostedZoom).coerceIn(1f, 10f)
+
+                        // Панорамирование
+                        val newOffset = offset + pan
+                        imageSize?.let { size ->
+                            val maxOffsetX = (scale - 1f) * size.width / 2f
+                            val maxOffsetY = (scale - 1f) * size.height / 2f
+
+                            offset = Offset(
+                                x = newOffset.x.coerceIn(-maxOffsetX, maxOffsetX),
+                                y = newOffset.y.coerceIn(-maxOffsetY, maxOffsetY)
+                            )
+                        } ?: run {
+                            offset = newOffset
+                        }
                     }
                 }
             }
             .pointerInput(Unit) {
                 detectTapGestures(
                     onDoubleTap = {
-                        // Двойной тап - увеличение/сброс
-                        scale = if (scale > 1f) 1f else 3f
-                        offset = Offset.Zero
+                        if (scale > 1f) {
+                            scale = 1f
+                            offset = Offset.Zero
+                        } else {
+                            scale = 2f
+                        }
                     }
                 )
             }
@@ -58,13 +81,14 @@ fun ZoomableImage(
                     translationX = offset.x
                     translationY = offset.y
                 }
-                .fillMaxSize(),
+                .fillMaxSize()
+                .onGloballyPositioned { layoutCoordinates ->
+                    imageSize = androidx.compose.ui.geometry.Size(
+                        layoutCoordinates.size.width.toFloat(),
+                        layoutCoordinates.size.height.toFloat()
+                    )
+                },
             contentScale = ContentScale.Fit
         )
-    }
-
-    LaunchedEffect(imageUrl) {
-        scale = 1f
-        offset = Offset.Zero
     }
 }

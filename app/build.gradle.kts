@@ -7,12 +7,12 @@ plugins {
 
 android {
     namespace = "ru.aftaa.p.mainactivity"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "ru.aftaa.p.mainactivity"
         minSdk = 26
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
@@ -89,8 +89,6 @@ dependencies {
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
     androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.5.4")
-    debugImplementation("androidx.compose.ui:ui-tooling:1.5.4")
-    debugImplementation("androidx.compose.ui:ui-test-manifest:1.5.4")
-
-    implementation("com.github.SmartToolFactory:Zoomable:1.0.0")
+    debugImplementation("androidx.compose.ui:ui-tooling:1.9.4")
+    debugImplementation("androidx.compose.ui:ui-test-manifest:1.9.4")
 }
