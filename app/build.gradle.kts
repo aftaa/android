@@ -3,6 +3,8 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("kotlin-parcelize")
     id("org.jetbrains.kotlin.plugin.compose")
+    id("kotlin-kapt")
+    id("com.google.dagger.hilt.android") version "2.48" // ← ДОБАВЬ ВЕРСИЮ! ////
 }
 
 android {
@@ -85,6 +87,10 @@ dependencies {
     // Загрузка изображений
     implementation("io.coil-kt:coil-compose:2.4.0")
 
+    implementation("com.google.dagger:hilt-android:2.48")
+    kapt("com.google.dagger:hilt-compiler:2.48")
+    implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
+
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
@@ -92,3 +98,8 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling:1.9.4")
     debugImplementation("androidx.compose.ui:ui-test-manifest:1.9.4")
 }
+
+kapt {
+    correctErrorTypes = true
+}
+

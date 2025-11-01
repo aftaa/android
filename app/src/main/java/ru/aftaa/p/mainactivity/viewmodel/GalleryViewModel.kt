@@ -7,8 +7,11 @@ import kotlinx.coroutines.launch
 import ru.aftaa.p.mainactivity.data.model.Album
 import ru.aftaa.p.mainactivity.data.model.Photo
 import ru.aftaa.p.mainactivity.network.RetrofitClient
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.StateFlow
 
-class GalleryViewModel : ViewModel() {
+class GalleryViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
     // Используем mutableStateOf напрямую без State интерфейса
     val currentAlbums = mutableStateOf<List<Album>>(emptyList())
     val currentPhotos = mutableStateOf<List<Photo>>(emptyList())
@@ -111,5 +114,22 @@ class GalleryViewModel : ViewModel() {
         } else {
             loadAlbumsTree()
         }
+    }
+
+    private val savedStateHandle = savedStateHandle
+    private val _lastViewedPositions = savedStateHandle.getStateFlow(
+        "lastViewedPositions",
+        emptyMap<String, Int>()
+    )
+
+    val lastViewedPositions: StateFlow<Map<String, Int>> = _lastViewedPositions
+
+    fun updateLastViewedPosition(albumId: String, position: Int) {
+        val current = _lastViewedPositions.value
+        savedStateHandle["lastViewedPositions"] = current + (albumId to position)
+    }
+
+    fun getLastViewedPosition(albumId: String): Int {
+        return _lastViewedPositions.value[albumId] ?: 0
     }
 }

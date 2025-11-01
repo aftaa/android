@@ -22,53 +22,77 @@ import androidx.activity.compose.BackHandler
 
 // В GalleryScreen.kt
 @Composable
-fun GalleryScreen(
-    viewModel: GalleryViewModel = viewModel(),
-    onImageClick: (Photo) -> Unit
-) {
-    val currentAlbums = viewModel.currentAlbums.value
-    val currentPhotos = viewModel.currentPhotos.value
-    val isLoading = viewModel.isLoading.value
-    val error = viewModel.error.value
-    val currentAlbumTitle = viewModel.currentAlbumTitle.value
-    val canGoBack = viewModel.canGoBack.value
+fun AppNavigation() {
+    val navController = rememberNavController()
 
-    // Перехватываем системную кнопку "Назад"
-    BackHandler(enabled = canGoBack) {
-        viewModel.goBack()
-    }
-
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(currentAlbumTitle) },
-                navigationIcon = {
-                    if (canGoBack) {
-                        IconButton(onClick = { viewModel.goBack() }) {
-                            Icon(Icons.Default.ArrowBack, "Назад")
-                        }
-                    }
+    NavHost(
+        navController = navController,
+        startDestination = "gallery"
+    ) {
+        composable("gallery") {
+            val viewModel: GalleryViewModel = hiltViewModel()
+            GalleryScreen(
+                viewModel = viewModel,
+                onImageClick = { photo ->
+                    // Временное решение - нужно доработать чтобы получить albumId и index
+                    navController.navigate("detail/temp_album?startIndex=0")
                 }
             )
         }
-    ) { paddingValues ->
-        Box(modifier = Modifier.padding(paddingValues)) {
-            if (currentPhotos.isNotEmpty()) {
-                PhotoGrid(
-                    photos = currentPhotos,
-                    isLoading = isLoading,
-                    error = error,
-                    onRetry = { viewModel.retry() },
-                    onImageClick = onImageClick
-                )
-            } else {
-                AlbumGrid(
-                    albums = currentAlbums,
-                    onAlbumClick = { album ->
-                        viewModel.navigateToAlbum(album)
+
+        // Этот маршрут может не понадобиться, если GalleryScreen сам управляет навигацией
+        // Но оставим на всякий случай
+        composable("album/{albumId}") { backStackEntry ->
+            val albumId = backStackEntry.arguments?.getString("albumId") ?: ""
+            val viewModel: GalleryViewModel = hiltViewModel()
+
+            // Если GalleryScreen сам переходит в состояние показа фото,
+            // этот экран может не использоваться
+            PhotoGrid(
+                photos = viewModel.photos,
+                isLoading = viewModel.isLoading,
+                error = viewModel.error,
+                onRetry = { viewModel.loadPhotosByAlbum(albumId) },
+                onImageClick = { photo, index ->
+                    navController.navigate("detail/${albumId}?startIndex=$index")
+                },
+                albumId = albumId,
+                viewModel = viewModel
+            )
+        }
+
+        composable(
+            "detail/{albumId}?startIndex={startIndex}",
+            arguments = listOf(
+                androidx.navigation.NavArgument(
+                    name = "albumId",
+                    builder = { androidx.navigation.NavType.StringType }
+                ),
+                androidx.navigation.NavArgument(
+                    name = "startIndex",
+                    builder = {
+                        androidx.navigation.NavType.IntType
+                        defaultValue = 0
+                        nullable = false
                     }
                 )
-            }
+            )
+        ) { backStackEntry ->
+            val albumId = backStackEntry.arguments?.getString("albumId") ?: ""
+            val startIndex = backStackEntry.arguments?.getInt("startIndex") ?: 0
+            val viewModel: GalleryViewModel = hiltViewModel()
+
+            // Получаем фото для альбома
+            val photos = viewModel.getPhotosByAlbum(albumId)
+
+            DetailScreen(
+                initialImageIndex = startIndex,
+                albumId = albumId,
+                photos = photos,
+                onBackClick = {
+                    navController.popBackStack()
+                }
+            )
         }
     }
 }
