@@ -3,13 +3,15 @@ package ru.aftaa.p.mainactivity.components
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material.Button
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -27,7 +29,8 @@ fun PhotoGrid(
     error: String?,
     onRetry: () -> Unit,
     onImageClick: (Photo) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    listState: LazyGridState = rememberLazyGridState()
 ) {
     Box(modifier = modifier) {
         when {
@@ -66,7 +69,8 @@ fun PhotoGrid(
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(3),
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(4.dp)
+                    contentPadding = PaddingValues(4.dp),
+                    state = listState
                 ) {
                     items(photos) { photo ->
                         AsyncImage(

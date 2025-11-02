@@ -20,7 +20,9 @@ import androidx.compose.ui.graphics.Color
 import ru.aftaa.p.mainactivity.data.model.Photo
 import androidx.activity.compose.BackHandler
 import androidx.compose.material3.MaterialTheme
+import androidx.lifecycle.viewmodel.compose.viewModel
 import ru.aftaa.p.mainactivity.components.ZoomableImage
+import ru.aftaa.p.mainactivity.viewmodel.GalleryViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,6 +31,8 @@ fun DetailScreen(
     photos: List<Photo>,
     onBackClick: () -> Unit
 ) {
+    val viewModel: GalleryViewModel = viewModel() // ДОБАВЛЯЕМ ViewModel
+
     BackHandler {
         onBackClick()
     }
@@ -45,6 +49,9 @@ fun DetailScreen(
         currentPage = pagerState.currentPage
         // Сбрасываем зум при смене фото
         isZoomed = false
+
+        // СОХРАНЯЕМ позицию в ViewModel при листании
+        viewModel.setCurrentPhotoIndex(pagerState.currentPage)
     }
 
     Scaffold(

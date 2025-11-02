@@ -17,6 +17,12 @@ class GalleryViewModel : ViewModel() {
     val currentAlbumTitle = mutableStateOf("Альбомы")
     val canGoBack = mutableStateOf(false)
 
+    val currentPhotoIndex = mutableStateOf(0)
+
+    fun setCurrentPhotoIndex(index: Int) {
+        currentPhotoIndex.value = index
+    }
+
     private val navigationStack = mutableListOf<Album>()
     private val _albumsTree = mutableStateOf<List<Album>>(emptyList())
 
