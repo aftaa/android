@@ -1,5 +1,6 @@
 package ru.aftaa.p.mainactivity.viewmodel
 
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -25,6 +26,24 @@ class GalleryViewModel : ViewModel() {
 
     private val navigationStack = mutableListOf<Album>()
     private val _albumsTree = mutableStateOf<List<Album>>(emptyList())
+
+    // ДОБАВЛЯЕМ: сохранение позиций скролла для альбомов
+    val albumScrollPositions = mutableStateMapOf<Long, Int>() // albumId -> scrollPosition
+
+    // ДОБАВЛЯЕМ: сохранение текущей позиции
+    val currentAlbumScrollIndex = mutableStateOf(0)
+
+    fun setCurrentAlbumScrollIndex(index: Int) {
+        currentAlbumScrollIndex.value = index
+    }
+
+    fun saveAlbumScrollPosition(albumId: Long, position: Int) {
+        albumScrollPositions[albumId] = position
+    }
+
+    fun getAlbumScrollPosition(albumId: Long): Int {
+        return albumScrollPositions[albumId] ?: 0
+    }
 
     init {
         loadAlbumsTree()

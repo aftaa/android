@@ -3,8 +3,10 @@ package ru.aftaa.p.mainactivity.components
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.Text
@@ -23,7 +25,8 @@ import ru.aftaa.p.mainactivity.data.model.Album
 fun AlbumGrid(
     albums: List<Album>,
     onAlbumClick: (Album) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    listState: LazyGridState = rememberLazyGridState() // ДОБАВЛЯЕМ параметр
 ) {
     println("DEBUG: AlbumGrid rendering ${albums.size} albums")
 
@@ -32,7 +35,8 @@ fun AlbumGrid(
         modifier = modifier,
         contentPadding = PaddingValues(8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        state = listState
     ) {
         items(albums) { album ->
             println("DEBUG: Rendering album: ${album.title}")
