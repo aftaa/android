@@ -1,4 +1,4 @@
-package ru.aftaa.p.mainactivity.components
+package ru.aftaa.p.mainactivity.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -19,6 +19,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import ru.aftaa.p.mainactivity.data.model.Photo
 import androidx.activity.compose.BackHandler
+import androidx.compose.material3.MaterialTheme
+import ru.aftaa.p.mainactivity.components.ZoomableImage
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,7 +53,7 @@ fun DetailScreen(
                 title = {
                     Text(
                         "${currentPage + 1} / ${photos.size}",
-                        style = androidx.compose.material3.MaterialTheme.typography.titleMedium
+                        style = MaterialTheme.typography.titleMedium
                     )
                 },
                 navigationIcon = {

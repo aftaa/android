@@ -1,10 +1,8 @@
 package ru.aftaa.p.mainactivity
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
-import ru.aftaa.p.mainactivity.components.DetailScreen
-import ru.aftaa.p.mainactivity.data.model.Photo
+import ru.aftaa.p.mainactivity.screens.DetailScreen
 import ru.aftaa.p.mainactivity.navigation.AppNavigation
 import ru.aftaa.p.mainactivity.navigation.Screen
 import ru.aftaa.p.mainactivity.screens.GalleryScreen
