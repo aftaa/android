@@ -54,6 +54,13 @@ fun GalleryScreen(
         }
     }
 
+    LaunchedEffect(currentPhotos) {
+        if (currentPhotos.isNotEmpty()) {
+            viewModel.setCurrentPhotoIndex(0)
+            photosListState.animateScrollToItem(0)
+        }
+    }
+
     // Перехватываем системную кнопку "Назад"
     BackHandler(enabled = canGoBack) {
         viewModel.goBack()
