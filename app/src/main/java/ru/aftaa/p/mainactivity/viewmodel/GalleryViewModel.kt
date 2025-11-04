@@ -33,6 +33,13 @@ class GalleryViewModel : ViewModel() {
     // ДОБАВЛЯЕМ: сохранение текущей позиции
     val currentAlbumScrollIndex = mutableStateOf(0)
 
+    // ДОБАВЛЯЕМ: флаг возврата из DetailScreen
+    val isReturningFromDetail = mutableStateOf(false)
+
+    fun setReturningFromDetail(value: Boolean) {
+        isReturningFromDetail.value = value
+    }
+
     fun setCurrentAlbumScrollIndex(index: Int) {
         currentAlbumScrollIndex.value = index
     }
