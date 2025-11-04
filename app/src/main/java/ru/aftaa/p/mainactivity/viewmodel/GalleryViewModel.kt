@@ -20,6 +20,9 @@ class GalleryViewModel : ViewModel() {
 
     val currentPhotoIndex = mutableStateOf(0)
 
+    // ДОБАВЛЯЕМ: флаг первой загрузки фото
+    val isFirstPhotoLoad = mutableStateOf(true)
+
     fun setCurrentPhotoIndex(index: Int) {
         currentPhotoIndex.value = index
     }
@@ -32,13 +35,6 @@ class GalleryViewModel : ViewModel() {
 
     // ДОБАВЛЯЕМ: сохранение текущей позиции
     val currentAlbumScrollIndex = mutableStateOf(0)
-
-    // ДОБАВЛЯЕМ: флаг возврата из DetailScreen
-    val isReturningFromDetail = mutableStateOf(false)
-
-    fun setReturningFromDetail(value: Boolean) {
-        isReturningFromDetail.value = value
-    }
 
     fun setCurrentAlbumScrollIndex(index: Int) {
         currentAlbumScrollIndex.value = index
@@ -100,6 +96,8 @@ class GalleryViewModel : ViewModel() {
                     navigationStack.add(album)
                     currentAlbumTitle.value = album.title
                     error.value = null
+                    // Сбрасываем флаг при загрузке нового альбома с фото
+                    isFirstPhotoLoad.value = true
                 } else {
                     error.value = "Ошибка загрузки фото"
                 }
@@ -126,6 +124,8 @@ class GalleryViewModel : ViewModel() {
                 currentAlbums.value = _albumsTree.value
                 currentAlbumTitle.value = "Альбомы"
             }
+            // Сбрасываем флаг при возврате к альбомам
+            isFirstPhotoLoad.value = true
         } else {
             println("DEBUG: Already at root, doing nothing")
             // Остаемся на главной, приложение не закрывается

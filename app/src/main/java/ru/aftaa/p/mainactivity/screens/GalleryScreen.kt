@@ -6,14 +6,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material.*
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -36,7 +32,7 @@ fun GalleryScreen(
     val canGoBack = viewModel.canGoBack.value
     val currentPhotoIndex = viewModel.currentPhotoIndex.value
     val currentAlbumScrollIndex = viewModel.currentAlbumScrollIndex.value
-    val isReturningFromDetail = viewModel.isReturningFromDetail.value
+    val isFirstPhotoLoad = viewModel.isFirstPhotoLoad.value
 
     // Состояния скролла
     val albumsListState = rememberLazyGridState(
@@ -44,21 +40,32 @@ fun GalleryScreen(
     )
     val photosListState = rememberLazyGridState()
 
-    // Восстанавливаем позицию только при возврате из DetailScreen
-    // Восстанавливаем позицию только при возврате из DetailScreen
+    // Восстанавливаем позицию фото
     LaunchedEffect(currentPhotoIndex, currentPhotos.isNotEmpty()) {
-        if (isReturningFromDetail && currentPhotoIndex > 0 && currentPhotos.isNotEmpty()) {
-            delay(100)
-            photosListState.animateScrollToItem(currentPhotoIndex)
-            viewModel.setReturningFromDetail(false)  // сбрасываем флаг
+        if (currentPhotos.isNotEmpty()) {
+            println("🔄 DEBUG: currentPhotoIndex = $currentPhotoIndex, isFirstPhotoLoad = $isFirstPhotoLoad")
+
+            if (isFirstPhotoLoad) {
+                // Первая загрузка фото (смена альбома) - начинаем с начала
+                photosListState.scrollToItem(0)
+                viewModel.isFirstPhotoLoad.value = false
+                println("🔄 DEBUG: Первая загрузка, скролл к 0")
+            } else if (currentPhotoIndex > 0) {
+                // Возврат из DetailScreen - восстанавливаем позицию
+                println("🚀 DEBUG: Возврат из DetailScreen, скролл к $currentPhotoIndex")
+                delay(100)
+                photosListState.animateScrollToItem(currentPhotoIndex)
+                println("✅ DEBUG: Скролл завершен")
+            }
         }
     }
 
-    // Сбрасываем позицию при смене альбома
+    // Сбрасываем флаг только при реальной смене альбома
     LaunchedEffect(currentAlbums) {
         if (currentAlbums.isNotEmpty()) {
-            viewModel.setCurrentPhotoIndex(0)
-            viewModel.setReturningFromDetail(false)
+            // Это показ альбомов, а не фото - сбрасываем флаг
+            viewModel.isFirstPhotoLoad.value = true
+            println("🔄 DEBUG: Сброс флага - показываем альбомы")
         }
     }
 
@@ -102,13 +109,12 @@ fun GalleryScreen(
                         isLoading = isLoading,
                         error = error,
                         onRetry = { viewModel.retry() },
-                        onImageClick = { photo ->  // ← Убираем явное указание типа
+                        onImageClick = { photo ->
                             val index = currentPhotos.indexOfFirst { it.id == photo.id }
                             if (index >= 0) {
                                 viewModel.setCurrentPhotoIndex(index)
-                                viewModel.setReturningFromDetail(true)
                             }
-                            onImageClick(photo)  // ← Вызываем оригинальный callback
+                            onImageClick(photo)
                         },
                         listState = photosListState
                     )
