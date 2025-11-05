@@ -3,8 +3,10 @@
     <!-- Base application theme. -->
     <style name="Theme.GalleryApp" parent="android:Theme.Material.Light">
         <!-- Customize your theme here. -->
-<!--        <item name="colorPrimary">@color/purple_500</item>-->
-<!--        <item name="colorPrimaryDark">@color/purple_700</item>-->
-<!--        <item name="colorAccent">@color/teal_200</item>-->
+    </style>
+
+    <!-- ДОБАВЬ эту тему без ActionBar -->
+    <style name="Theme.GalleryApp.NoActionBar" parent="android:Theme.Material.Light.NoActionBar">
+        <!-- Ничего не нужно, родительская тема уже без ActionBar -->
     </style>
 </resources>

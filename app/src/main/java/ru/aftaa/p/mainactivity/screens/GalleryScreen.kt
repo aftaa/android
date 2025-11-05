@@ -2,12 +2,16 @@ package ru.aftaa.p.mainactivity.screens
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
@@ -39,6 +43,11 @@ fun GalleryScreen(
         initialFirstVisibleItemIndex = currentAlbumScrollIndex
     )
     val photosListState = rememberLazyGridState()
+
+    // ДОБАВЛЯЕМ: системные insets для отступа от статус-бара
+    val systemBarsPadding = WindowInsets.systemBars
+        .only(WindowInsetsSides.Top)
+        .asPaddingValues()
 
     // Восстанавливаем позицию фото
     LaunchedEffect(currentPhotoIndex, currentPhotos.isNotEmpty()) {
@@ -81,56 +90,46 @@ fun GalleryScreen(
         viewModel.goBack()
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(currentAlbumTitle) },
-                navigationIcon = {
-                    if (canGoBack) {
-                        IconButton(onClick = { viewModel.goBack() }) {
-                            Icon(Icons.Default.ArrowBack, "Назад")
+    // УБИРАЕМ Scaffold и оставляем только контент
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(systemBarsPadding) // ← ДОБАВЛЯЕМ отступ от статус-бара
+    ) {
+        when {
+            isLoading && currentAlbums.isEmpty() && currentPhotos.isEmpty() -> {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            }
+
+            currentPhotos.isNotEmpty() -> {
+                PhotoGrid(
+                    photos = currentPhotos,
+                    isLoading = isLoading,
+                    error = error,
+                    onRetry = { viewModel.retry() },
+                    onImageClick = { photo ->
+                        val index = currentPhotos.indexOfFirst { it.id == photo.id }
+                        if (index >= 0) {
+                            viewModel.setCurrentPhotoIndex(index)
                         }
-                    }
-                }
-            )
-        }
-    ) { paddingValues ->
-        Box(modifier = Modifier.padding(paddingValues)) {
-            when {
-                isLoading && currentAlbums.isEmpty() && currentPhotos.isEmpty() -> {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
-                    }
-                }
+                        onImageClick(photo)
+                    },
+                    listState = photosListState
+                )
+            }
 
-                currentPhotos.isNotEmpty() -> {
-                    PhotoGrid(
-                        photos = currentPhotos,
-                        isLoading = isLoading,
-                        error = error,
-                        onRetry = { viewModel.retry() },
-                        onImageClick = { photo ->
-                            val index = currentPhotos.indexOfFirst { it.id == photo.id }
-                            if (index >= 0) {
-                                viewModel.setCurrentPhotoIndex(index)
-                            }
-                            onImageClick(photo)
-                        },
-                        listState = photosListState
-                    )
-                }
-
-                else -> {
-                    AlbumGrid(
-                        albums = currentAlbums,
-                        onAlbumClick = { album ->
-                            val currentScrollIndex = albumsListState.firstVisibleItemIndex
-                            viewModel.setCurrentAlbumScrollIndex(currentScrollIndex)
-                            viewModel.navigateToAlbum(album)
-                        },
-                        listState = albumsListState
-                    )
-                }
+            else -> {
+                AlbumGrid(
+                    albums = currentAlbums,
+                    onAlbumClick = { album ->
+                        val currentScrollIndex = albumsListState.firstVisibleItemIndex
+                        viewModel.setCurrentAlbumScrollIndex(currentScrollIndex)
+                        viewModel.navigateToAlbum(album)
+                    },
+                    listState = albumsListState
+                )
             }
         }
     }

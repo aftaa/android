@@ -7,31 +7,24 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.Icons
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.*
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import ru.aftaa.p.mainactivity.components.ZoomableImage
 import ru.aftaa.p.mainactivity.data.model.Photo
 import ru.aftaa.p.mainactivity.viewmodel.GalleryViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetailScreen(
     initialImageIndex: Int,
     photos: List<Photo>,
     onBackClick: () -> Unit
 ) {
-    val viewModel: GalleryViewModel = viewModel() // ДОБАВЛЯЕМ ViewModel
+    val viewModel: GalleryViewModel = viewModel()
 
     BackHandler {
         onBackClick()
@@ -52,45 +45,37 @@ fun DetailScreen(
         println("📸 DEBUG: Сохраняем позицию ${pagerState.currentPage} в ViewModel")
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        "${currentPage + 1} / ${photos.size}",
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Назад"
-                        )
-                    }
-                }
-            )
-        }
-    ) { paddingValues ->
+    // УБИРАЕМ Scaffold и TopAppBar
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black)
+    ) {
+        // Индикатор текущей позиции (опционально - можно убрать если хочешь чистый экран)
         Box(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .background(Color.Black)
+                .align(Alignment.TopCenter)
+                .padding(16.dp)
         ) {
-            HorizontalPager(
-                state = pagerState,
+            Text(
+                text = "${currentPage + 1} / ${photos.size}",
+                color = Color.White,
+                style = androidx.compose.material3.MaterialTheme.typography.titleMedium
+            )
+        }
+
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.fillMaxSize(),
+            userScrollEnabled = !isZoomed
+        ) { page ->
+            ZoomableImage(
+                imageUrl = photos[page].fullImageUrl,
                 modifier = Modifier.fillMaxSize(),
-                userScrollEnabled = !isZoomed // ← Блокируем свайпы когда увеличены
-            ) { page ->
-                ZoomableImage(
-                    imageUrl = photos[page].fullImageUrl,
-                    modifier = Modifier.fillMaxSize(),
-                    onZoomStateChange = { zoomed ->
-                        isZoomed = zoomed
-                    }
-                )
-            }
+                onZoomStateChange = { zoomed ->
+                    isZoomed = zoomed
+                }
+            )
         }
     }
 }
